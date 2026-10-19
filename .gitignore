@@ -3,3 +3,7 @@ __pycache__/
 .venv/
 .DS_Store
 .vscode/
+# Compiled C executables
+/src/c/dense_basic
+/src/c/dense_reordered
+/src/c/dense_blocked
