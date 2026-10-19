@@ -3,13 +3,13 @@ import subprocess
 import csv
 from pathlib import Path
 
-sizes = [50, 100, 150, 200, 250]
+sizes = [500, 750, 1000]
 repetitions = 5
-block_size = 32
+block_size = 128
 
 project_root = Path(__file__).resolve().parents[1]
 executable = project_root / "src" / "c" / "run_matrix"
-results_file = project_root / "results" / "dense_c_results.csv"
+results_file = project_root / "results" / "dense_c_large_results.csv"
 
 methods = ["basic", "reordered", "blocked"]
 
