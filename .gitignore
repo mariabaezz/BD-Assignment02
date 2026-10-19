@@ -1,9 +1,19 @@
+
+# Python
 __pycache__/
 *.pyc
 .venv/
+
+# macOS and VS Code
 .DS_Store
 .vscode/
+
 # Compiled C executables
 /src/c/dense_basic
 /src/c/dense_reordered
 /src/c/dense_blocked
+/src/c/run_matrix
+
+# Other compiled files
+*.o
+*.out
