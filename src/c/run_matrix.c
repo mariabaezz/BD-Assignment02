@@ -87,14 +87,13 @@ int main(int argc, char *argv[]) {
     long long *A = malloc(elements * sizeof(long long));
     long long *B = malloc(elements * sizeof(long long));
     long long *C = malloc(elements * sizeof(long long));
-    long long *reference = malloc(elements * sizeof(long long));
+    long long *reference = NULL;
 
-    if (A == NULL || B == NULL || C == NULL || reference == NULL) {
+    if (A == NULL || B == NULL || C == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         free(A);
         free(B);
         free(C);
-        free(reference);
         return 1;
     }
 
@@ -131,19 +130,32 @@ int main(int argc, char *argv[]) {
         (end.tv_nsec - start.tv_nsec) / 1e9;
     
     // Compute reference result outside the timed region
-    multiply_basic(A, B, reference, n);
+    #ifdef VALIDATE_RESULTS
 
-    // Compare every element
-    for (size_t i = 0; i < elements; i++) {
-        if (C[i] != reference[i]) {
-            fprintf(stderr, "Incorrect result at index %zu\n", i);
+        reference = malloc(elements * sizeof(long long));
+
+        if (reference == NULL) {
+            fprintf(stderr, "Reference allocation failed\n");
             free(A);
             free(B);
             free(C);
-            free(reference);
             return 1;
         }
-    }
+
+        multiply_basic(A, B, reference, n);
+
+        for (size_t i = 0; i < elements; i++) {
+            if (C[i] != reference[i]) {
+                fprintf(stderr, "Incorrect result at index %zu\n", i);
+                free(A);
+                free(B);
+                free(C);
+                free(reference);
+                return 1;
+            }
+        }
+
+#endif
 
     long long checksum = 0;
 

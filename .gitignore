@@ -13,6 +13,7 @@ __pycache__/
 /src/c/dense_reordered
 /src/c/dense_blocked
 /src/c/run_matrix
+/src/c/run_matrix_validate
 
 # Other compiled files
 *.o
