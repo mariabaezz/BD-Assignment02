@@ -27,6 +27,7 @@ void multiply_blocked(const long long *A, const long long *B,
         }
     }
 }
+#ifndef MATRIX_LIBRARY
 
 int main(void) {
 
@@ -56,3 +57,4 @@ long long C[9];
 
     return 0;
 }
+#endif

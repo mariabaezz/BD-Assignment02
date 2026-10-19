@@ -19,7 +19,7 @@ void multiply_reordered(const long long *A, const long long *B,
         }
     }
 }
-
+#ifndef MATRIX_LIBRARY
 int main(void) {
 
     int n = 2;
@@ -45,3 +45,4 @@ int main(void) {
 
     return 0;
 }
+#endif
