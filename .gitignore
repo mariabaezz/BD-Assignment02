@@ -14,6 +14,8 @@ __pycache__/
 /src/c/dense_blocked
 /src/c/run_matrix
 /src/c/run_matrix_validate
+/src/c/sparse_csr
+/src/c/test_sparse
 
 # Other compiled files
 *.o
