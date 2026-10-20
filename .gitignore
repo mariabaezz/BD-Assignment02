@@ -16,6 +16,8 @@ __pycache__/
 /src/c/run_matrix_validate
 /src/c/sparse_csr
 /src/c/test_sparse
+/src/c/run_sparse
+/src/c/run_sparse_memory
 
 # Other compiled files
 *.o

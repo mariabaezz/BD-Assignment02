@@ -12,6 +12,22 @@ project_root = Path(__file__).resolve().parents[1]
 executable = project_root / "src" / "c" / "run_matrix"
 results_file = project_root / "results" / "block_sizes_c.csv"
 
+reference = subprocess.run(
+    [
+        str(executable),
+        "basic",
+        str(n),
+        "32"
+    ],
+    cwd=project_root,
+    capture_output=True,
+    text=True,
+    check=True
+)
+
+_, expected_checksum = reference.stdout.strip().split(",")
+expected_checksum = int(expected_checksum)
+
 with open(results_file, "w", newline="") as file:
     writer = csv.writer(file)
 
@@ -43,8 +59,10 @@ with open(results_file, "w", newline="") as file:
 
             elapsed_time, checksum = result.stdout.strip().split(",")
 
-            if int(checksum) != 315567802:
-                raise ValueError("Incorrect result")
+            if int(checksum) != expected_checksum:
+                raise ValueError(
+                    f"Incorrect result for block size {block_size}"
+                )
 
             times.append(float(elapsed_time))
 

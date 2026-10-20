@@ -12,6 +12,7 @@ executable = project_root / "src" / "c" / "run_matrix"
 results_file = project_root / "results" / "dense_c_large_results.csv"
 
 methods = ["basic", "reordered", "blocked"]
+expected_checksums = {}
 
 with open(results_file, "w", newline="") as file:
     writer = csv.writer(file)
@@ -43,6 +44,14 @@ with open(results_file, "w", newline="") as file:
 
                 elapsed_time, checksum = result.stdout.strip().split(",")
 
+                checksum = int(checksum)
+
+                if n not in expected_checksums:
+                    expected_checksums[n] = checksum
+                elif checksum != expected_checksums[n]:
+                    raise ValueError(
+                        f"Checksum mismatch for n={n}, method={method}"
+                    )
                 writer.writerow([
                     method,
                     n,
