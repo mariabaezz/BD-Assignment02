@@ -207,6 +207,56 @@ plt.savefig(figures / "block_sizes.png", dpi=300)
 plt.close()
 
 
+large_rows = read_csv("block_sizes_large.csv")
+
+plt.figure(figsize=(8, 5))
+
+for n in [500, 1000]:
+
+    block_sizes = sorted({
+        int(row["block_size"])
+        for row in large_rows
+        if int(row["matrix_size"]) == n
+    })
+
+    medians = []
+
+    for block_size in block_sizes:
+
+        times = [
+            float(row["execution_time_seconds"])
+            for row in large_rows
+            if int(row["matrix_size"]) == n
+            and int(row["block_size"]) == block_size
+        ]
+
+        if len(times) != 5:
+            raise ValueError(
+                f"Expected 5 repetitions: n={n}, block={block_size}"
+            )
+
+        medians.append(median(times))
+
+    plt.plot(
+        block_sizes,
+        medians,
+        marker="o",
+        label=f"n={n}"
+    )
+
+plt.xlabel("Block size")
+plt.ylabel("Median execution time (seconds)")
+plt.title("Block Size Tuning - Large Matrices")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+
+plt.savefig(
+    figures / "block_sizes_large.png",
+    dpi=300
+)
+plt.close()
+
 print("\nAnalysis completed.")
 print("Tables saved in results/")
 print("Figures saved in results/figures/")
