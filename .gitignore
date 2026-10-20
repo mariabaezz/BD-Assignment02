@@ -22,3 +22,9 @@ __pycache__/
 # Other compiled files
 *.o
 *.out
+
+# Additional scaling inputs (reproducible)
+/inputs/A_1500.csv
+/inputs/B_1500.csv
+/inputs/A_2000.csv
+/inputs/B_2000.csv

@@ -257,7 +257,8 @@ for n in SIZES:
 
     plt.xlabel("Input sparsity (%)")
     plt.ylabel("Median Peak RSS (MiB)")
-    plt.title(f"Dense vs CSR Memory - n={n}")
+    plt.title(f"Dense vs Dense-to-CSR Pipeline - n={n}")
+    plt.ylim(bottom=0)
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
@@ -331,6 +332,66 @@ plt.tight_layout()
 
 plt.savefig(
     FIGURES / "sparse_speedup_total.png",
+    dpi=300
+)
+plt.close()
+
+
+
+n = 500
+
+dense_storage = []
+csr_storage = []
+
+for sparsity in SPARSITIES:
+
+    rows = [
+        row for row in time_rows
+        if int(row["matrix_size"]) == n
+        and int(row["sparsity"]) == sparsity
+    ]
+
+    nnz_a = int(rows[0]["nnz_A"])
+    nnz_b = int(rows[0]["nnz_B"])
+
+    # Storage of both input matrices
+    dense_bytes = 2 * 8 * n * n
+
+    csr_bytes = (
+        12 * nnz_a + 4 * (n + 1)
+        + 12 * nnz_b + 4 * (n + 1)
+    )
+
+    dense_storage.append(dense_bytes / (1024 * 1024))
+    csr_storage.append(csr_bytes / (1024 * 1024))
+
+
+plt.figure(figsize=(8, 5))
+
+plt.plot(
+    SPARSITIES,
+    dense_storage,
+    marker="o",
+    label="Dense inputs (A + B)"
+)
+
+plt.plot(
+    SPARSITIES,
+    csr_storage,
+    marker="o",
+    label="CSR inputs (A + B)"
+)
+
+plt.xlabel("Input sparsity (%)")
+plt.ylabel("Theoretical storage (MiB)")
+plt.title("Theoretical Input Storage - n=500")
+plt.ylim(bottom=0)
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+
+plt.savefig(
+    FIGURES / "sparse_theoretical_storage.png",
     dpi=300
 )
 plt.close()

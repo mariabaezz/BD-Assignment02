@@ -1,0 +1,60 @@
+
+Experimental Environment
+
+Hardware:
+- CPU: Apple M4
+- Model identifier: Mac16,1
+- Physical CPU cores: 10
+- Logical CPUs: 10
+- RAM: 16 GiB
+- Architecture: ARM64
+
+Software:
+- Operating system: macOS 26.3.1 (a)
+- OS build: 25D771280a
+- Compiler: Apple Clang 21.0.0
+- Main C compilation flags: -O2 -DMATRIX_LIBRARY
+- Validation-only flag: -DVALIDATE_RESULTS
+- Implementation: Sequential C
+
+Measurement Methodology:
+- Runtime timer: CLOCK_MONOTONIC
+- Runtime repetitions: 5
+- Summary statistics: Median and inclusive IQR
+- Runtime warm-up: 1 multiplication before timing
+- Peak RSS: /usr/bin/time -l (macOS)
+- Matrix value type: long long (64-bit)
+- CSR column indices and row pointers: int (32-bit)
+
+Tested Configurations:
+- Dense matrix sizes: 50, 100, 150, 200, 250, 500, 750, 1000
+- Sparse matrix sizes: 100, 250, 500
+- Input sparsity levels: 0%, 50%, 80%, 90%, 95%, 99%
+
+Validation:
+- Final validation passed: 8 Dense configurations
+- Final validation passed: 18 Sparse configurations
+- Dense and Sparse results compared element by element
+
+Additional Scaling Experiment
+
+Provisional execution budget:
+- Maximum total process runtime: 60 seconds
+- Maximum Peak RSS: 2 GiB
+
+Dense Reordered, n=1500:
+- Timed multiplication: 2.148865 seconds
+- Total process runtime: 4.58 seconds
+- Peak RSS: 55361536 bytes
+- Checksum: 68292811157
+
+Dense Reordered, n=2000:
+- Timed multiplication: 4.856322 seconds
+- Total process runtime: 10.31 seconds
+- Peak RSS: 97402880 bytes
+- Checksum: 162045984472
+
+Largest successfully tested scaling size:
+- Dense Reordered: n=2000
+- Both tested scaling sizes met the provisional budget
+- This is not a claim of the maximum feasible size
