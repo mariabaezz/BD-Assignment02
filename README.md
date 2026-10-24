@@ -1,88 +1,89 @@
 # BD Assignment 02 — Optimised Matrix Multiplication and Sparse Matrices
 
-**Course:** Big Data  
-**Academic year:** 2026–2027  
+**Course:** Big Data (2026–2027)  
 **Author:** María Báez Marrero  
-**Implementation:** C, with Python for input generation, benchmarking and data analysis.
+**Languages:** C and Python  
+**Repository:** https://github.com/mariabaezz/BD-Assignment02
 
-## 1. Project Overview
+## 1. Overview
 
-This project investigates the performance of different matrix multiplication approaches, focusing on execution time, memory consumption and the influence of matrix sparsity.
-
-The assignment is divided into two parts:
+This project evaluates the performance of dense and sparse matrix multiplication, focusing on execution time, memory usage and the influence of matrix sparsity.
 
 **Part A — Dense Matrix Multiplication**
 
-Three sequential matrix multiplication algorithms are implemented and compared:
+Three sequential algorithms are implemented in C:
 
-- **Basic:** conventional matrix multiplication using the i-j-k loop order.
-- **Reordered:** multiplication using the i-k-j loop order to improve memory access patterns.
-- **Blocked:** tiled multiplication using different block sizes.
+- **Basic:** standard multiplication using the `i-j-k` loop order.
+- **Reordered:** `i-k-j` loop order to improve memory access locality.
+- **Blocked:** tiled multiplication with configurable block sizes.
 
 **Part B — Sparse Matrix Multiplication**
 
-A custom Compressed Sparse Row (CSR) representation is implemented to investigate how matrix sparsity affects multiplication performance.
+A custom Compressed Sparse Row (CSR) representation is used to multiply sparse matrices. Dense inputs are converted to CSR, multiplied, and stored in a dense output matrix.
 
-The sparse implementation converts two dense input matrices into CSR, performs CSR-based multiplication and produces a dense output matrix.
+The experiments compare Dense Reordered against CSR multiplication, measuring both multiplication time and conversion overhead.
 
-Both the multiplication-only time and the cost of converting the input matrices to CSR are evaluated.
+All implementations use sequential C, 64-bit integers and no external numerical libraries.
 
-## 2. Implementation
+## 2. Repository Structure
 
-The matrix multiplication algorithms are implemented in C using sequential execution and 64-bit integer values (`long long`).
+```text
+BD-Assignment02/
+├── src/c/        # Dense and CSR implementations
+├── benchmark/    # Input generators and benchmark scripts
+├── analysis/     # Statistical analysis and figures
+├── tests/        # Correctness tests
+├── inputs/       # Dense and sparse input datasets
+├── results/      # Raw CSVs, summaries, system.txt and figures/
+└── README.md
+```
 
-The dense implementations use flat, row-major arrays.
-
-The CSR implementation stores nonzero elements using three arrays:
-
-- `values`: nonzero matrix values.
-- `col_index`: column indices of those values.
-- `row_ptr`: starting positions of each row.
-
-CSR multiplication processes nonzero entries of the input matrices while accumulating the result in a dense output matrix.
-
-Python is used to generate reproducible input datasets, automate experiments, validate results and produce statistical summaries and figures.
+The repository includes the main experimental datasets, measurements and analysis scripts. Additional scaling inputs are generated separately.
 
 ## 3. Experimental Environment
 
 | Component | Specification |
 |---|---|
-| Processor | Apple M4 |
-| Physical cores | 10 |
-| Logical CPUs | 10 |
+| Processor | Apple M4 (10 physical / 10 logical cores) |
+| Model | Mac16,1 |
 | RAM | 16 GiB |
 | Architecture | ARM64 |
-| Operating system | macOS 26.3.1 |
+| Operating system | macOS 26.3.1 (build 25D771280a) |
 | Compiler | Apple Clang 21.0.0 |
-| Compiler optimisation | `-O2` |
-| Execution model | Sequential |
+| Python | 3.13.0 |
+| Matplotlib | 3.10.8 |
+| Compilation | `-O2 -DMATRIX_LIBRARY` |
+| Execution | Sequential |
 
-Runtime measurements use `CLOCK_MONOTONIC` in C.
+Matrix values use `long long` (64-bit); CSR indices and row pointers use `int` (32-bit).
 
-Peak resident memory is measured using macOS `/usr/bin/time -l`.
+### Measurement Methodology
 
-Each main benchmark configuration is executed five times. Results are summarised using the median and interquartile range (IQR), with inclusive quartiles.
+- Runtime measured using `CLOCK_MONOTONIC`.
+- Five repetitions per main benchmark configuration.
+- One multiplication warm-up before timing.
+- Results summarised using median and inclusive IQR.
+- Peak RSS measured using macOS `/usr/bin/time -l`, specifically `maximum resident set size` in bytes.
+- Input reading and correctness verification excluded from multiplication timers.
+- Output initialisation included in multiplication time.
 
-## 4. Requirements
+Peak RSS includes process overhead and temporary allocations, not just matrix storage.
 
-The project requires:
+The compiler flag `-DVALIDATE_RESULTS` is used only for correctness checks, never for memory measurements.
 
-- A C compiler compatible with the source code, such as Apple Clang.
-- Python 3.
-- Matplotlib for generating figures.
-- macOS for the provided Peak RSS measurement scripts.
+Additional environment information is available in `results/system.txt`.
 
-Install the plotting dependency with:
+## 4. Setup and Compilation
 
-`python3 -m pip install matplotlib`
+Clone the repository:
 
-The C multiplication implementations do not depend on external numerical libraries.
+```bash
+git clone https://github.com/mariabaezz/BD-Assignment02.git
+cd BD-Assignment02
+python3 -m pip install matplotlib
+```
 
-All commands below assume that they are executed from the repository root.
-
-## 5. Compilation
-
-### Dense benchmark
+### Dense multiplication
 
 ```bash
 clang -O2 -DMATRIX_LIBRARY \
@@ -93,7 +94,7 @@ src/c/dense_blocked.c \
 -o src/c/run_matrix
 ```
 
-### Dense validation executable
+### Dense validation
 
 ```bash
 clang -O2 -DMATRIX_LIBRARY -DVALIDATE_RESULTS \
@@ -104,7 +105,7 @@ src/c/dense_blocked.c \
 -o src/c/run_matrix_validate
 ```
 
-### Sparse benchmark
+### Sparse multiplication
 
 ```bash
 clang -O2 -DMATRIX_LIBRARY \
@@ -114,7 +115,7 @@ src/c/dense_reordered.c \
 -o src/c/run_sparse
 ```
 
-### Sparse memory benchmark
+### Sparse memory measurement
 
 ```bash
 clang -O2 -DMATRIX_LIBRARY \
@@ -124,220 +125,185 @@ src/c/dense_reordered.c \
 -o src/c/run_sparse_memory
 ```
 
-The `MATRIX_LIBRARY` definition prevents demonstration `main()` functions from conflicting when the C files are linked together.
+The `MATRIX_LIBRARY` flag prevents multiple demonstration `main()` functions from being linked.
 
-The `VALIDATE_RESULTS` definition enables additional correctness checks and must not be used for the reported memory benchmarks.
+## 5. Input Generation
 
-## 6. Input Generation
+The datasets use fixed random seeds for reproducibility.
 
-Input matrices contain integer values and use fixed random seeds for reproducibility.
+| Experiment | Matrix sizes | Configuration |
+|---|---|---|
+| Dense | 50, 100, 150, 200, 250, 500, 750, 1000 | Integer values 0–9 |
+| Sparse | 100, 250, 500 | Sparsity 0%, 50%, 80%, 90%, 95%, 99% |
+| Additional scaling | 1500, 2000 | Dense Reordered |
 
-### Dense matrices
+Generate the datasets if needed:
 
-The dense experiments use matrix sizes:
+```bash
+python3 -m benchmark.generate_dense_small_inputs
+python3 -m benchmark.generate_dense_inputs
+python3 -m benchmark.generate_sparse_inputs
+```
 
-50, 100, 150, 200, 250, 500, 750 and 1000.
+Small dense inputs use the original Assignment 1 generator with seed 42 and a continuous random sequence. Large dense inputs use a separate deterministic generator. Sparse inputs use controlled nonzero counts and random positions.
 
-The original small inputs can be regenerated with:
+For additional scaling inputs:
 
-`python3 -m benchmark.generate_dense_small_inputs`
+```bash
+python3 -m benchmark.generate_scaling_input 1500
+python3 -m benchmark.generate_scaling_input 2000
+```
 
-Larger dense inputs can be regenerated with:
+**Note:** Most generators overwrite existing inputs. The scaling generator refuses to overwrite existing files. The original main datasets are already included in the repository.
 
-`python3 -m benchmark.generate_dense_inputs`
+## 6. Reproducing the Experiments
 
-**Important:** Generators write matrix CSV files. Preserve the existing input files when reproducing the original recorded results.
+The recommended workflow is:
 
-### Sparse matrices
+**Generate inputs → Compile C executables → Run tests → Run benchmarks → Analyse results**
 
-The sparse experiments use matrix sizes:
+### Part A — Dense
 
-100, 250 and 500.
+```bash
+python3 -m benchmark.benchmark_dense
+python3 -m benchmark.benchmark_blocks
+python3 -m benchmark.benchmark_blocks_large
+python3 -m benchmark.memory_benchmark
+python3 -m analysis.analyse_dense
+```
 
-The tested input sparsity levels are:
+The original runtime experiments used two configurations:
 
-0%, 50%, 80%, 90%, 95% and 99%.
+| Sizes | Block size | Output |
+|---|---|---|
+| 50–250 | 32 | `dense_c_results.csv` |
+| 500–1000 | 128 | `dense_c_large_results.csv` |
 
-Matrices are generated with controlled numbers of nonzero elements and reproducible random positions.
+`benchmark_dense.py` is currently configured for the larger matrices. To reproduce the smaller experiment, change its `sizes`, `block_size` and `results_file` parameters accordingly.
 
-To regenerate the sparse datasets:
+### Part B — Sparse
 
-`python3 -m benchmark.generate_sparse_inputs`
+```bash
+python3 -m benchmark.benchmark_sparse
+python3 -m benchmark.benchmark_sparse_memory
+python3 -m analysis.analyse_sparse
+```
 
-The datasets are stored in `inputs/sparse/`.
+The sparse benchmarks record conversion time, multiplication time, nonzero counts, checksums and Peak RSS. Dense and Sparse memory measurements use separate processes.
 
-### Additional scaling inputs
+The analysis scripts generate medians, IQRs, speedups and figures from the raw CSV files.
 
-An additional generator is provided for larger scaling experiments:
+**Warning:** Re-running benchmarks overwrites their configured results files. Back up the original measurements before repeating experiments.
 
-`python3 -m benchmark.generate_scaling_input 1500`
+## 7. Correctness Validation
 
-`python3 -m benchmark.generate_scaling_input 2000`
+The implementations are checked against reference multiplication results.
 
-These inputs are excluded from Git because they can be regenerated.
+Dense validation compares full outputs against Basic. Sparse validation compares the CSR multiplication result against Dense Reordered element by element.
 
-## 7. Running the Experiments
+After compilation, run:
 
-### Part A — Dense multiplication
+```bash
+python3 -m tests.test_final
+```
 
-Run the dense benchmarks:
+All **26 final configurations passed**:
 
-`python3 -m benchmark.benchmark_dense`
+- 8 Dense matrix-size configurations.
+- 18 Sparse size/sparsity configurations.
 
-Run the block-size experiment for n = 250:
+Additional small tests include known products, identity and zero matrices. Exact integer comparisons are used rather than floating-point tolerances.
 
-`python3 -m benchmark.benchmark_blocks`
+## 8. Main Results
 
-Run the additional block-size experiment for n = 500 and 1000:
+### Dense Multiplication
 
-`python3 -m benchmark.benchmark_blocks_large`
+For n = 1000:
 
-Run the dense memory benchmark:
+| Method | Median runtime | Speedup |
+|---|---:|---:|
+| Basic | 0.741946 s | 1.00× |
+| Reordered | 0.601308 s | 1.23× |
+| Blocked (128) | 0.614269 s | 1.21× |
 
-`python3 -m benchmark.memory_benchmark`
+Reordered performed best in this comparison. Blocked improved on Basic for larger matrices but did not consistently outperform Reordered.
 
-The original experiments include five repetitions for each configuration.
+Additional tuning found block size 128 fastest among those tested at n = 500, while 512 was fastest at n = 1000. Block size 128 remained competitive in both cases.
 
-### Part B — Sparse multiplication
+### Sparse Multiplication
 
-Run the sparse performance benchmark:
+For n = 500, including conversion time:
 
-`python3 -m benchmark.benchmark_sparse`
+| Input sparsity | Total CSR speedup |
+|---|---:|
+| 0% | 0.93× |
+| 50% | 2.84× |
+| 80% | 12.04× |
+| 90% | 32.30× |
+| 95% | 71.57× |
+| 99% | 158.65× |
 
-Run the sparse memory benchmark:
+For the tested random matrices, CSR outperformed Dense Reordered at 50% sparsity and above, even including conversion. The exact break-even threshold between 0% and 50% was not measured.
 
-`python3 -m benchmark.benchmark_sparse_memory`
+Output density can be much higher than input density. At n = 500 and 90% input sparsity, C contained 248,334 nonzero values out of 250,000 positions (99.33% density).
 
-The sparse benchmarks measure:
+## 9. Memory Interpretation
 
-- Dense reordered multiplication time.
-- Conversion time from dense matrices to CSR.
-- CSR multiplication time.
-- Conversion time plus CSR multiplication time.
-- Number of nonzero elements in A, B and C.
-- Peak RSS for dense and sparse execution paths.
+Theoretical storage for one n × n matrix is:
 
-Sparse memory measurements execute the dense and sparse methods in separate processes.
+- **Dense:** `8 × n²` bytes.
+- **CSR:** `12 × nnz + 4 × (n + 1)` bytes.
 
-## 8. Correctness Validation
+These expressions describe matrix storage, not total process memory.
 
-The project includes automated correctness checks.
+Our sparse pipeline loads A and B as dense matrices, converts them into CSR and produces dense C. Therefore, the measured Sparse Peak RSS can exceed the Dense Peak RSS despite CSR requiring less storage for sparse inputs.
 
-Compile the dense validation executable as described in Section 5 and run:
+The project reports theoretical representation storage and measured process memory separately.
 
-`python3 -m tests.test_final`
+## 10. Additional Scaling Experiment
 
-The final validation checks eight dense configurations and eighteen sparse configurations.
+A complementary Dense Reordered experiment used a provisional budget of:
 
-All 26 final configurations passed.
+- **Time:** 60 seconds total process runtime.
+- **Memory:** 2 GiB Peak RSS.
 
-The dense validation executable compares full multiplication results against the basic implementation. The sparse validation compares dense and CSR multiplication outputs element by element.
+| Size | Timed multiplication | Total runtime | Peak RSS |
+|---|---:|---:|---:|
+| 1500 | 2.148865 s | 4.58 s | 52.80 MiB |
+| 2000 | 4.856322 s | 10.31 s | 92.89 MiB |
 
-Checksums are also used to detect inconsistencies during benchmarking.
+Checksums were `68292811157` for n = 1500 and `162045984472` for n = 2000.
 
-## 9. Statistical Analysis
+Both tests met the provisional budget. **n = 2000 was the largest successfully tested size, not the maximum feasible size of the system.** These were individual scaling runs rather than five-repetition benchmarks.
 
-The analysis scripts read the raw benchmark CSV files and generate summary tables and plots.
+## 11. Limitations
 
-To analyse the dense experiments:
+The findings are specific to the tested Apple M4 hardware, compiler, input distributions and measurement conditions.
 
-`python3 -m analysis.analyse_dense`
+Important limitations include:
 
-To analyse the sparse experiments:
+- Only sequential integer implementations were evaluated; no GPU, parallel execution or external BLAS libraries.
+- Sparse inputs use randomly distributed nonzeros; structured sparsity was not tested.
+- CSR multiplication has a dense output, so it is not a fully sparse-output implementation.
+- Conversion overhead matters when input matrices are initially dense.
+- Peak RSS includes process overhead, dense temporary inputs and additional CSR allocations.
+- Five repetitions and fixed benchmark ordering do not eliminate timing variability.
+- Very short CSR runtimes are particularly sensitive to measurement noise.
+- Block-size results are specific to the tested configurations.
+- The exact sparsity break-even point and maximum feasible matrix dimension were not determined.
 
-`python3 -m analysis.analyse_sparse`
+These limitations are considered when interpreting the experimental results.
 
-The analysis includes:
+## 12. Use of AI Tools
 
-- Median execution time.
-- Inclusive interquartile range.
-- Speedup relative to the relevant dense baseline.
-- Peak RSS statistics.
-- CSR conversion cost.
-- Input and output sparsity.
-- Block-size sensitivity.
+ChatGPT (OpenAI) and Claude (Anthropic) were used for algorithm explanations, C/Python code suggestions, debugging, test development, experimental methodology review, statistical analysis support and documentation review.
 
-The raw measurements and generated summaries are stored in `results/`.
+Their assistance affected the implementation workflow, benchmarking scripts, analysis and README. The recorded results were obtained from executions of the project code, and correctness was checked through the included tests.
 
-The figures are stored in `results/figures/`.
+AI assistance is disclosed for academic transparency.
 
-**Note:** Re-running a benchmark may overwrite the corresponding raw results file. The included datasets and experimental results are preserved in the repository.
+---
 
-## 10. Main Experimental Findings
+**Repository:** https://github.com/mariabaezz/BD-Assignment02
 
-### Dense multiplication
-
-Reordering the loops generally improves execution time for larger matrices compared with the basic implementation.
-
-Blocked multiplication is competitive with reordered multiplication, but does not consistently outperform it on the tested hardware.
-
-Additional block-size experiments show that block size 128 performs well for larger matrices, although the best measured size varies with matrix dimensions.
-
-The three dense implementations show very similar memory consumption because they store the same three dense matrices.
-
-### Sparse multiplication
-
-CSR-based multiplication provides substantial execution-time improvements when the input matrices contain many zeros.
-
-When conversion is included, CSR is slower for fully dense inputs but faster at the tested sparsity levels of 50% and above.
-
-The output matrix can become substantially denser than the input matrices. Therefore, input sparsity alone does not determine the storage requirements of the product.
-
-## 11. Memory Interpretation
-
-Two different memory concepts are considered.
-
-**Theoretical matrix storage**
-
-For an n × n matrix of 64-bit integers:
-
-- Dense storage: `8 × n²` bytes.
-- CSR storage: `12 × nnz + 4 × (n + 1)` bytes, using 32-bit indices.
-
-This calculation describes the matrix representation itself.
-
-**Peak resident memory**
-
-Peak RSS measures the memory consumption of the complete running program.
-
-The sparse pipeline first loads dense matrices, converts them to CSR and uses a dense output matrix. Consequently, its measured Peak RSS can exceed that of the dense implementation, even when the CSR input representation requires substantially less storage.
-
-The theoretical storage comparison and measured process memory must not be interpreted as equivalent metrics.
-
-## 12. Additional Scaling Experiment
-
-Additional Dense Reordered tests were performed for n = 1500 and n = 2000.
-
-A provisional experimental budget of 60 seconds total process runtime and 2 GiB Peak RSS was used for these additional checks.
-
-Both tests completed within this budget.
-
-The largest successfully tested size was n = 2000. This is not a claim that n = 2000 is the maximum feasible matrix size on the hardware.
-
-Detailed environment and scaling measurements are recorded in `results/system.txt`.
-
-## 13. Limitations
-
-The experimental results are specific to the tested Apple M4 environment, compiler and input datasets.
-
-The main limitations include:
-
-- Sparse input positions are generated randomly rather than using structured sparsity patterns.
-- CSR multiplication uses a dense output matrix.
-- Sparse conversion and multiplication are measured separately, and their combined cost represents a particular input-processing scenario.
-- The memory measurements include process overhead and temporary allocations.
-- Five repetitions provide a limited estimate of runtime variability.
-- Block-size tuning is experimental and does not establish a universally optimal block size.
-- The additional scaling experiment does not establish a hardware-wide maximum feasible size.
-
-## 14. Use of AI Tools
-
-AI assistance, including ChatGPT and Claude, was used during development for explanations of algorithms, code suggestions, debugging support, experiment planning, technical review and documentation.
-
-The implementations, experiments, datasets and reported results were developed and tested within the project workflow. The use of AI assistance is disclosed for transparency.
-
-## 15. Repository
-
-GitHub repository:
-
-https://github.com/mariabaezz/BD-Assignment02
+Raw measurements, summary CSV files, source code and figures are available in the repository. The final report presents selected figures and a more detailed discussion of the findings.
