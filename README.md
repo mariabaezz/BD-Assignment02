@@ -296,9 +296,8 @@ These limitations are considered when interpreting the experimental results.
 
 ## 12. Use of AI Tools
 
-ChatGPT (OpenAI) and Claude (Anthropic) were used for algorithm explanation, debugging, statistical analysis support and documentation review.
+Claude (Anthropic) was used for algorithm explanation, debugging, statistical analysis support and documentation review.
 
-Their assistance affected the implementation workflow, benchmarking scripts, analysis and README. The recorded results were obtained from executions of the project code, and correctness was checked through the included tests.
 
 AI assistance is disclosed for academic transparency.
 
